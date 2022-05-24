@@ -121,7 +121,7 @@ if(!class_exists('merchant_garantex_crypto_code')){
 
 			$m_id = key_for_url('_status');
 			$m_defin = $this->get_file_data($m_id);
-			$m_data = get_merch_data($m_id);
+			$m_data = get_merch_data($m_id);	
 
 			$hashed = is_bid_hash(is_param_post('hash'));
 			$code = trim(is_param_post('code'));
@@ -140,7 +140,7 @@ if(!class_exists('merchant_garantex_crypto_code')){
 						if(in_array($bid_status, $en_status)){
 							
 							$bid_currency = $data['currency'];
-							$bid_currency = strtoupper(str_replace('RUR','RUB',$bid_currency));
+							$bid_currency = strtoupper(str_replace('RUB','RUR',$bid_currency));
 							
 							$bid_sum = is_sum($data['pay_sum']);
 							$bid_corr_sum = apply_filters('merchant_bid_sum', $bid_sum, $bid_m_id);							
@@ -150,39 +150,25 @@ if(!class_exists('merchant_garantex_crypto_code')){
 							$invalid_maxsum = intval(is_isset($m_data, 'invalid_maxsum'));
 							$invalid_check = intval(is_isset($m_data, 'check'));
 							
-							$code_hidden = $this->garantex_hidden_code($code);
-							
 							if($code){
 								try{
-									$class = new Garantex_Crypto_Code($this->name, $m_id, is_isset($m_defin,'PRIVATE_KEY'), is_isset($m_defin, 'UID'));
-									$info = $class->redeem_voucher($code);
+									$res = new Garantex_Crypto_Code($this->name, $m_id, is_isset($m_defin,'PRIVATE_KEY'), is_isset($m_defin, 'UID'));
+									$info = $res->redeem_voucher($code);
 									if($info){
 										$merch_sum = is_isset($info,'amount');
 										$merch_currency = strtoupper(is_isset($info,'currency'));
-										$merch_trans_id = strtoupper(is_isset($info,'task_id'));
+										$merch_trans_id = trim(is_isset($info,'id'));
 										if($merch_sum >= $bid_corr_sum or $invalid_minsum > 0){
 											if($merch_currency == $bid_currency or $invalid_ctype > 0){
 												
 												$pay_purse = is_pay_purse($code, $m_data, $bid_m_id);
 												
-												$status = 'coldpay';
-												
-												$trans = $class->get_history();
-												foreach($trans as $tran){
-													$tran_code = $tran['account'];
-													if($tran_code){
-														if($tran_code == $code or $tran_code == $code_hidden){
-															$status = 'realpay';
-														}
-													}
-												}
-												
 												$params = array(
 													'pay_purse' => $pay_purse,
 													'sum' => $merch_sum,
 													'bid_sum' => $bid_sum,
-													'bid_status' => array('new','techpay','coldpay'),
 													'bid_corr_sum' => $bid_corr_sum,
+													'bid_status' => array('new','techpay','coldpay'),
 													'trans_in' => $merch_trans_id,
 													'currency' => $merch_currency,
 													'bid_currency' => $bid_currency,
@@ -195,7 +181,8 @@ if(!class_exists('merchant_garantex_crypto_code')){
 													'm_data' => $m_data,
 													'm_defin' => $m_defin,
 												);
-												set_bid_status($status, $id, $params, $data['direction_data']); 
+												
+												set_bid_status('realpay', $id, $params, $data['direction_data']);  											
 												 
 												wp_redirect(get_bids_url($item->hashed));
 												exit;					
@@ -207,12 +194,12 @@ if(!class_exists('merchant_garantex_crypto_code')){
 											$this->error_back($hashed, '4');					
 										}
 									} else {
-										$this->error_back($hashed, '3');							
+										$this->error_back($hashed, '2');							
 									}
 								}
 								catch (Exception $e)
 								{
-									$this->logs($e->getMessage(), $m_id);
+									$this->logs($e->getMessage());
 									$show_error = intval(is_isset($m_data, 'show_error'));
 									if($show_error and current_user_can('administrator')){
 										die($e->getMessage());
@@ -223,7 +210,8 @@ if(!class_exists('merchant_garantex_crypto_code')){
 								$this->error_back($hashed, '1');				
 							}
 						} else {
-							$this->error_back($hashed, '1');
+							wp_redirect(get_bids_url($hashed));
+							exit;
 						}
 					} else {
 						pn_display_mess(__('Error 3!','pn'));
@@ -233,7 +221,7 @@ if(!class_exists('merchant_garantex_crypto_code')){
 				}	
 			} else {
 				pn_display_mess(__('Error 1!','pn'));
-			}					
+			}				
 		}
 		
 
