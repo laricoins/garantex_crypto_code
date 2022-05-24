@@ -48,7 +48,7 @@ if(!class_exists('merchant_garantex_crypto_code')){
 			
 			$options = pn_array_unset($options, array('enableip','resulturl','help_resulturl','check_api','note','cronhash'));			
 			$text = '
-			<div><strong>CRON:</strong> <a href="'. get_mlink($m_id.'_cron' . chash_url($m_id)) .'" target="_blank">'. get_mlink($m_id.'_cron' . chash_url($m_id)) .'</a></div>			
+			<div><strong>CRON:</strong> <a href="'. get_mlink($id.'_cron' . chash_url($id)) .'" target="_blank">'. get_mlink($id.'_cron' . chash_url($id)) .'</a></div>			
 			';
 			$options['text'] = array(
 				'view' => 'textfield',
