@@ -185,14 +185,27 @@ if(!class_exists('Garantex_Crypto_Code')){
 	public function redeem_voucher($code){
 		
 		$request = $this->request('/api/v2/depositcodes/redeem', array('deposit_code'=>$code));
-		$res = @json_decode($request);
-		if(is_object($res)){
+		$res =$request;
+	
+		if(isset($res['id'])){
+				return $res;
 			return $res;
 		}
 		/* или данные или пустота */
 		
 		return '';
 	}		
+	
+		public function get_history_deposits($limit =100){
+			sleep(2);
+        	$limit = intval($limit);
+			$res = $this->request('/api/v2/deposits?limit=' . $limit, array());
+			$trans = array();
+			if(is_array($res) and !isset($res['error'])){
+				$trans = $res;
+			}
+			return $trans;
+		}	
 		
 		function request($method, $post=array()){
 
